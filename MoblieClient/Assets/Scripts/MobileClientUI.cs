@@ -2,7 +2,10 @@
 using FishNet.Transporting.Tugboat;
 using UnityEngine;
 using UnityEngine.UI;
+using UnityEngine.SceneManagement;
 using TMPro;
+//using FishNet.Managing.Scened;
+
 
 public class MobileClientUI : MonoBehaviour
 {
@@ -10,6 +13,8 @@ public class MobileClientUI : MonoBehaviour
     public Button connectButton;
     public TextMeshProUGUI statusText;
     public TMP_InputField ipInputField;
+
+    private bool isConnected = false;
 
     void Start()
     {
@@ -42,18 +47,22 @@ public class MobileClientUI : MonoBehaviour
     }
 
     void OnConnectionState(
-        FishNet.Transporting.ClientConnectionStateArgs args)
+    FishNet.Transporting.ClientConnectionStateArgs args)
     {
+        Debug.Log($"연결 상태: {args.ConnectionState}");
+
         if (args.ConnectionState ==
-            FishNet.Transporting.LocalConnectionState.Started)
+    FishNet.Transporting.LocalConnectionState.Started)
         {
+            isConnected = true;
             statusText.text = "✅ 연결 성공!";
-            connectButton.gameObject.SetActive(false);
-            ipInputField.gameObject.SetActive(false);
+            UnityEngine.SceneManagement.SceneManager.LoadScene("JobSelectScene");
         }
         else if (args.ConnectionState ==
             FishNet.Transporting.LocalConnectionState.Stopped)
         {
+            if (isConnected) return;
+
             statusText.text = "❌ 연결 끊김\n다시 눌러주세요";
             connectButton.interactable = true;
             connectButton.gameObject.SetActive(true);

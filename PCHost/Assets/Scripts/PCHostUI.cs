@@ -1,14 +1,15 @@
-using FishNet;
-using FishNet.Transporting.Tugboat;
+Ôªøusing FishNet;
 using FishNet.Connection;
+using FishNet.Managing.Scened;
+using FishNet.Transporting.Tugboat;
+using System.Collections;
+using TMPro;
 using UnityEngine;
 using UnityEngine.UI;
-using TMPro;
-using System.Collections;
 
 public class PCHostUI : MonoBehaviour
 {
-    [Header("UI ø¨∞·")]
+    [Header("UI Ïó∞Í≤∞")]
     public TMP_InputField ipInputField;
     public Button startButton;
     public TextMeshProUGUI statusText;
@@ -30,8 +31,6 @@ public class PCHostUI : MonoBehaviour
             .GetComponent<Tugboat>();
 
         tugboat.SetPort(7777);
-
-        // ≈∏¿”æ∆øÙ 3√ ∑Œ º≥¡§
         tugboat.SetMaximumClients(4);
         tugboat.SetTimeout(3, false);
 
@@ -39,29 +38,47 @@ public class PCHostUI : MonoBehaviour
         InstanceFinder.ClientManager.StartConnection();
 
         startButton.interactable = false;
-        statusText.text = $"¥Î±‚ ¡ﬂ \n IP: {ipInputField.text}";
+        statusText.text = $"ÎåÄÍ∏∞ Ï§ë | IP: {ipInputField.text}";
+
+        // GameManager Ïä§Ìè∞
+        StartCoroutine(SpawnGameManager());
+    }
+
+    IEnumerator SpawnGameManager()
+    {
+        yield return new WaitForSeconds(0.5f);
+
+        var prefab = Resources.Load<GameObject>("GameManager");
+        if (prefab != null)
+        {
+            var obj = Instantiate(prefab);
+            InstanceFinder.ServerManager.Spawn(obj);
+        }
     }
 
 
     void OnClientConnected(NetworkConnection conn,
     FishNet.Transporting.RemoteConnectionStateArgs args)
     {
-        // »£Ω∫∆Æ ¿⁄Ω≈¿« ClientId ¥¬ 0
         if (conn.ClientId == 0) return;
 
         if (args.ConnectionState ==
             FishNet.Transporting.RemoteConnectionState.Started)
         {
             connectedCount++;
+            statusText.text = $"Ïó∞Í≤∞Îêú Í∏∞Í∏∞: {connectedCount} / 4";
         }
         else if (args.ConnectionState ==
-            FishNet.Transporting.RemoteConnectionState.Stopped)
+    FishNet.Transporting.RemoteConnectionState.Stopped)
         {
             connectedCount--;
             if (connectedCount < 0) connectedCount = 0;
-        }
+            statusText.text = $"Ïó∞Í≤∞Îêú Í∏∞Í∏∞: {connectedCount} / 4";
 
-        statusText.text = $"ø¨∞·µ» ±‚±‚: {connectedCount} / 4";
+            // ÏßÅÏóÖ Ìï¥Ï†ú
+            var gm = FindFirstObjectByType<GameManager>();
+            gm?.OnClientDisconnected(conn.ClientId);
+        }
     }
 
     string GetLocalIP()
