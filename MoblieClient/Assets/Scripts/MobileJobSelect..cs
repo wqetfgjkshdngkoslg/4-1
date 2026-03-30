@@ -8,17 +8,35 @@ public class MobileJobSelect : MonoBehaviour
 {
     public static MobileJobSelect Instance;
 
-    [Header("버튼")]
-    public Button cctvButton;
-    public Button witnessButton;
-    public Button scienceButton;
-    public Button backgroundButton;
+    [Header("4명용 버튼")]
+    public Button CCTV;
+    public Button Witness;
+    public Button Science;
+    public Button Background;
 
-    [Header("설명 텍스트")]
-    public TextMeshProUGUI cctvDesc;
-    public TextMeshProUGUI witnessDesc;
-    public TextMeshProUGUI scienceDesc;
-    public TextMeshProUGUI backgroundDesc;
+    [Header("4명용 설명")]
+    public TextMeshProUGUI CCTVDesc;
+    public TextMeshProUGUI WitnessDesc;
+    public TextMeshProUGUI ScienceDesc;
+    public TextMeshProUGUI BackgroundDesc;
+
+    [Header("2명용 버튼")]
+    public Button Btn2_1;
+    public Button Btn2_2;
+
+    [Header("2명용 설명")]
+    public TextMeshProUGUI Desc2_1;
+    public TextMeshProUGUI Desc2_2;
+
+    [Header("3명용 버튼")]
+    public Button Btn3_1;
+    public Button Btn3_2;
+    public Button Btn3_3;
+
+    [Header("3명용 설명")]
+    public TextMeshProUGUI Desc3_1;
+    public TextMeshProUGUI Desc3_2;
+    public TextMeshProUGUI Desc3_3;
 
     [Header("상태 텍스트")]
     public TextMeshProUGUI statusText;
@@ -32,18 +50,86 @@ public class MobileJobSelect : MonoBehaviour
 
     void Start()
     {
-        cctvButton.onClick.AddListener(
-            () => OnJobButtonClicked("CCTV분석관"));
-        witnessButton.onClick.AddListener(
-            () => OnJobButtonClicked("목격자조사관"));
-        scienceButton.onClick.AddListener(
-            () => OnJobButtonClicked("과학수사관"));
-        backgroundButton.onClick.AddListener(
-            () => OnJobButtonClicked("배경조사관"));
+        int maxPlayers = DataManager.Instance.MaxPlayers;
+        Debug.Log($"인원수 확인: {maxPlayers}");
 
-        // 씬 진입 시 현재 직업 상태 요청
+        SetAllButtonsInactive();
+
+        if (maxPlayers == 2)
+        {
+            Btn2_1.gameObject.SetActive(true);
+            Btn2_2.gameObject.SetActive(true);
+            Desc2_1.gameObject.SetActive(true);
+            Desc2_2.gameObject.SetActive(true);
+
+            Btn2_1.onClick.AddListener(
+                () => OnJobButtonClicked("수사관1"));
+            Btn2_2.onClick.AddListener(
+                () => OnJobButtonClicked("수사관2"));
+        }
+        else if (maxPlayers == 3)
+        {
+            Btn3_1.gameObject.SetActive(true);
+            Btn3_2.gameObject.SetActive(true);
+            Btn3_3.gameObject.SetActive(true);
+            Desc3_1.gameObject.SetActive(true);
+            Desc3_2.gameObject.SetActive(true);
+            Desc3_3.gameObject.SetActive(true);
+
+            Btn3_1.onClick.AddListener(
+                () => OnJobButtonClicked("수사관1"));
+            Btn3_2.onClick.AddListener(
+                () => OnJobButtonClicked("수사관2"));
+            Btn3_3.onClick.AddListener(
+                () => OnJobButtonClicked("수사관3"));
+        }
+        else if (maxPlayers == 4)
+        {
+            CCTV.gameObject.SetActive(true);
+            Witness.gameObject.SetActive(true);
+            Science.gameObject.SetActive(true);
+            Background.gameObject.SetActive(true);
+            CCTVDesc.gameObject.SetActive(true);
+            WitnessDesc.gameObject.SetActive(true);
+            ScienceDesc.gameObject.SetActive(true);
+            BackgroundDesc.gameObject.SetActive(true);
+
+            CCTV.onClick.AddListener(
+                () => OnJobButtonClicked("CCTV분석관"));
+            Witness.onClick.AddListener(
+                () => OnJobButtonClicked("목격자조사관"));
+            Science.onClick.AddListener(
+                () => OnJobButtonClicked("과학수사관"));
+            Background.onClick.AddListener(
+                () => OnJobButtonClicked("배경조사관"));
+        }
+
         var gm = FindFirstObjectByType<GameManager>();
         gm?.RequestJobStatusServerRpc();
+    }
+
+    void SetAllButtonsInactive()
+    {
+        CCTV.gameObject.SetActive(false);
+        Witness.gameObject.SetActive(false);
+        Science.gameObject.SetActive(false);
+        Background.gameObject.SetActive(false);
+        CCTVDesc.gameObject.SetActive(false);
+        WitnessDesc.gameObject.SetActive(false);
+        ScienceDesc.gameObject.SetActive(false);
+        BackgroundDesc.gameObject.SetActive(false);
+
+        Btn2_1.gameObject.SetActive(false);
+        Btn2_2.gameObject.SetActive(false);
+        Desc2_1.gameObject.SetActive(false);
+        Desc2_2.gameObject.SetActive(false);
+
+        Btn3_1.gameObject.SetActive(false);
+        Btn3_2.gameObject.SetActive(false);
+        Btn3_3.gameObject.SetActive(false);
+        Desc3_1.gameObject.SetActive(false);
+        Desc3_2.gameObject.SetActive(false);
+        Desc3_3.gameObject.SetActive(false);
     }
 
     void OnJobButtonClicked(string jobName)
@@ -65,31 +151,32 @@ public class MobileJobSelect : MonoBehaviour
         }
     }
 
-    // 직업 선택 성공
     public void OnJobConfirmed(string jobName)
     {
         selectedJob = jobName;
         statusText.text = $"✅ {jobName} 선택됨!";
 
-        // 해당 직업 씬으로 전환
-        SceneManager.LoadScene(jobName);
+        DataManager.Instance.SelectedJob = jobName;
+
+        SceneManager.LoadScene("Mobile_LobbyScene");
     }
 
-    // 직업 선택 거부 (이미 선택된 경우)
     public void OnJobRejected(string jobName)
     {
         statusText.text = $"❌ {jobName} 은 이미 선택됨";
     }
 
-    // 다른 플레이어가 직업 선택했을 때
     public void OnJobStatusUpdated(string jobName, bool isTaken)
     {
         Button btn = jobName switch
         {
-            "CCTV분석관" => cctvButton,
-            "목격자조사관" => witnessButton,
-            "과학수사관" => scienceButton,
-            "배경조사관" => backgroundButton,
+            "수사관1" => Btn2_1,
+            "수사관2" => Btn2_2,
+            "수사관3" => Btn3_3,
+            "CCTV분석관" => CCTV,
+            "목격자조사관" => Witness,
+            "과학수사관" => Science,
+            "배경조사관" => Background,
             _ => null
         };
 

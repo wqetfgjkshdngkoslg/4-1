@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 1113277847307014513}
   - component: {fileID: 3996509859126614863}
+  - component: {fileID: -1262997845024326295}
   - component: {fileID: 5202204648977342910}
   m_Layer: 0
   m_Name: GameManager
@@ -45,9 +46,21 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 0ef7b6626ae65d14f8947a76b7d8459a, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::GameManager
-  _componentIndexCache: 255
+  _componentIndexCache: 0
   _addedNetworkObject: {fileID: 5202204648977342910}
-  _networkObjectCache: {fileID: 0}
+  _networkObjectCache: {fileID: 5202204648977342910}
+--- !u!114 &-1262997845024326295
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3510791669765875803}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: c75b2facefcb39c44a2ef659087cd479, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: Assembly-CSharp::GameManagerKeeper
 --- !u!114 &5202204648977342910
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -91,7 +104,7 @@ MonoBehaviour:
   <PredictedSpawn>k__BackingField: {fileID: 0}
   <PredictedOwner>k__BackingField: {fileID: 0}
   NetworkBehaviours:
-  - {fileID: 0}
+  - {fileID: 3996509859126614863}
   InitializedParentNetworkBehaviour: {fileID: 0}
   InitializedNestedNetworkObjects: []
   RuntimeParentNetworkBehaviour: {fileID: 0}
@@ -102,4 +115,4 @@ MonoBehaviour:
   _initializeOrder: 0
   _preventDespawnOnDisconnect: 0
   _defaultDespawnType: 0
-  _initializedTimestamp: -8584275396061525006
+  _initializedTimestamp: -8584268011950791646

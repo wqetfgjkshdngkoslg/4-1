@@ -2,10 +2,7 @@
 using FishNet.Transporting.Tugboat;
 using UnityEngine;
 using UnityEngine.UI;
-using UnityEngine.SceneManagement;
 using TMPro;
-//using FishNet.Managing.Scened;
-
 
 public class MobileClientUI : MonoBehaviour
 {
@@ -14,15 +11,14 @@ public class MobileClientUI : MonoBehaviour
     public TextMeshProUGUI statusText;
     public TMP_InputField ipInputField;
 
-    private bool isConnected = false;
-
     void Start()
     {
-        ipInputField.text = "";
-        connectButton.onClick.AddListener(OnConnectClicked);
+        // NetworkManager는 씬 전환 시 파괴되지 않도록 설정 (보통 프리팹에 설정되어 있음)
+        if (InstanceFinder.NetworkManager != null)
+            DontDestroyOnLoad(InstanceFinder.NetworkManager.gameObject);
 
-        InstanceFinder.ClientManager.OnClientConnectionState
-            += OnConnectionState;
+            connectButton.onClick.AddListener(OnConnectClicked);
+        InstanceFinder.ClientManager.OnClientConnectionState += OnConnectionState;
     }
 
     void OnConnectClicked()
@@ -34,49 +30,35 @@ public class MobileClientUI : MonoBehaviour
             return;
         }
 
-        var tugboat = InstanceFinder.NetworkManager
-            .GetComponent<Tugboat>();
-
+        var tugboat = InstanceFinder.NetworkManager.GetComponent<Tugboat>();
         tugboat.SetClientAddress(ip);
         tugboat.SetPort(7777);
 
+        // 연결 시도
         InstanceFinder.ClientManager.StartConnection();
 
         connectButton.interactable = false;
-        statusText.text = "연결 중...";
+        statusText.text = "연결 시도 중...";
     }
 
-    void OnConnectionState(
-    FishNet.Transporting.ClientConnectionStateArgs args)
+    void OnConnectionState(FishNet.Transporting.ClientConnectionStateArgs args)
     {
-        Debug.Log($"연결 상태: {args.ConnectionState}");
-
-        if (args.ConnectionState ==
-    FishNet.Transporting.LocalConnectionState.Started)
+        if (args.ConnectionState == FishNet.Transporting.LocalConnectionState.Started)
         {
-            isConnected = true;
-            statusText.text = "✅ 연결 성공!";
-            UnityEngine.SceneManagement.SceneManager.LoadScene("JobSelectScene");
+            statusText.text = "✅ 연결 성공!\n서버 응답 대기 중...";
+            // 여기서 직접 SceneManager.LoadScene을 하면 안 됩니다! 
+            // 서버가 쏴주는 SceneLoadData를 기다려야 합니다.
         }
-        else if (args.ConnectionState ==
-            FishNet.Transporting.LocalConnectionState.Stopped)
+        else if (args.ConnectionState == FishNet.Transporting.LocalConnectionState.Stopped)
         {
-            if (isConnected) return;
-
-            statusText.text = "❌ 연결 끊김\n다시 눌러주세요";
+            statusText.text = "❌ 연결 실패 또는 끊김";
             connectButton.interactable = true;
-            connectButton.gameObject.SetActive(true);
-            ipInputField.gameObject.SetActive(true);
         }
     }
 
     void OnDestroy()
     {
         if (InstanceFinder.ClientManager != null)
-        {
-            InstanceFinder.ClientManager
-                .OnClientConnectionState
-                -= OnConnectionState;
-        }
+            InstanceFinder.ClientManager.OnClientConnectionState -= OnConnectionState;
     }
 }

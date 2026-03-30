@@ -1,4 +1,4 @@
-using FishNet;
+ï»¿using FishNet;
 using FishNet.Object;
 using FishNet.Connection;
 using UnityEngine;
@@ -10,13 +10,19 @@ public class GameManager : NetworkBehaviour
 
     private Dictionary<string, int> selectedJobs
         = new Dictionary<string, int>();
-
     private Dictionary<int, string> clientJobs
         = new Dictionary<int, string>();
+    private int maxPlayers = 0;
 
     void Awake()
     {
         if (Instance == null) Instance = this;
+    }
+
+    public override void OnStartClient()
+    {
+        base.OnStartClient();
+
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -32,13 +38,12 @@ public class GameManager : NetworkBehaviour
 
         selectedJobs[jobName] = sender.ClientId;
         clientJobs[sender.ClientId] = jobName;
-        Debug.Log($"Á÷¾÷ ¼±ÅÃµÊ: {jobName}");
+        Debug.Log($"ì§ì—… ì„ íƒë¨: {jobName}");
 
         UpdateJobStatusClientRpc(jobName, true);
         ConfirmJobClientRpc(sender, jobName);
     }
 
-    // »õ·Î Á¢¼ÓÇÑ Å¬¶óÀÌ¾ğÆ®¿¡°Ô ÇöÀç Á÷¾÷ »óÅÂ Àü¼Û
     [ServerRpc(RequireOwnership = false)]
     public void RequestJobStatusServerRpc(
         NetworkConnection sender = null)
@@ -49,6 +54,31 @@ public class GameManager : NetworkBehaviour
         }
     }
 
+    [ServerRpc(RequireOwnership = false)]
+    public void SetMaxPlayersAndLoadSceneForConnServerRpc(
+        int count, int targetClientId,
+        NetworkConnection sender = null)
+    {
+        maxPlayers = count;
+
+        if (InstanceFinder.ServerManager.Clients
+            .TryGetValue(targetClientId,
+                out NetworkConnection conn))
+        {
+            SetMaxPlayersAndLoadSceneTargetRpc(conn, count);
+        }
+    }
+
+    [TargetRpc]
+    void SetMaxPlayersAndLoadSceneTargetRpc(
+    NetworkConnection conn, int count)
+    {
+#if UNITY_ANDROID
+    DataManager.Instance.MaxPlayers = count;
+    UnityEngine.SceneManagement.SceneManager
+        .LoadScene("JobSelectScene");
+#endif
+    }
     [TargetRpc]
     void UpdateJobStatusTargetRpc(
         NetworkConnection conn, string jobName, bool isTaken)
@@ -65,7 +95,7 @@ public class GameManager : NetworkBehaviour
             string jobName = clientJobs[clientId];
             selectedJobs.Remove(jobName);
             clientJobs.Remove(clientId);
-            Debug.Log($"Á÷¾÷ ÇØÁ¦µÊ: {jobName}");
+            Debug.Log($"ì§ì—… í•´ì œë¨: {jobName}");
             UpdateJobStatusClientRpc(jobName, false);
         }
     }
@@ -74,7 +104,7 @@ public class GameManager : NetworkBehaviour
     void RejectJobClientRpc(
         NetworkConnection conn, string jobName)
     {
-        Debug.Log($"Á÷¾÷ °ÅºÎ: {jobName}");
+        Debug.Log($"ì§ì—… ê±°ë¶€: {jobName}");
 #if UNITY_ANDROID
         MobileJobSelect.Instance?.OnJobRejected(jobName);
 #endif
@@ -84,7 +114,7 @@ public class GameManager : NetworkBehaviour
     void ConfirmJobClientRpc(
         NetworkConnection conn, string jobName)
     {
-        Debug.Log($"Á÷¾÷ È®ÀÎ: {jobName}");
+        Debug.Log($"ì§ì—… í™•ì¸: {jobName}");
 #if UNITY_ANDROID
         MobileJobSelect.Instance?.OnJobConfirmed(jobName);
 #endif
@@ -94,7 +124,7 @@ public class GameManager : NetworkBehaviour
     void UpdateJobStatusClientRpc(
         string jobName, bool isTaken)
     {
-        Debug.Log($"Á÷¾÷ »óÅÂ ¾÷µ¥ÀÌÆ®: {jobName} = {isTaken}");
+        Debug.Log($"ì§ì—… ìƒíƒœ ì—…ë°ì´íŠ¸: {jobName} = {isTaken}");
 #if UNITY_ANDROID
         MobileJobSelect.Instance?.OnJobStatusUpdated(jobName, isTaken);
 #endif
