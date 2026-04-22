@@ -12,6 +12,9 @@ EditorBuildSettings:
     path: Assets/Scenes/WaitingScene.unity
     guid: d8d8eefbfee94ba4fb2d96d5b3470a22
   - enabled: 1
+    path: Assets/Scenes/OpeningScene.unity
+    guid: d1ceef86c800663418349a92b6142e97
+  - enabled: 1
     path: Assets/Scenes/PC_LobbyScene.unity
     guid: 7629ffdcd06d5a14b8ca568699f926c4
   - enabled: 1
