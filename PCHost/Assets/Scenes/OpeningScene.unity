@@ -686,8 +686,8 @@ MonoBehaviour:
       m_Calls: []
   m_text: New Text
   m_isRightToLeft: 0
-  m_fontAsset: {fileID: 11400000, guid: d33ccff47a77e244fbae2ec005741110, type: 2}
-  m_sharedMaterial: {fileID: 157630318506450510, guid: d33ccff47a77e244fbae2ec005741110, type: 2}
+  m_fontAsset: {fileID: 11400000, guid: e1e8e7851f42ba346993cf09a4fd48b4, type: 2}
+  m_sharedMaterial: {fileID: 157630318506450510, guid: e1e8e7851f42ba346993cf09a4fd48b4, type: 2}
   m_fontSharedMaterials: []
   m_fontMaterial: {fileID: 0}
   m_fontMaterials: []
@@ -1115,6 +1115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 547393977721c7c47bfeefab5f86ef57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StoryStepManager
+  nextSceneName: HostPc
   imageGroups:
   - {fileID: 614929687}
   - {fileID: 2028315128}
@@ -1143,6 +1144,7 @@ MonoBehaviour:
   fadeDuration: 1
   charInterval: 0.03
   waitAfterTyping: 2
+  finalExtraWait: 3
 --- !u!4 &1576169651
 Transform:
   m_ObjectHideFlags: 0
