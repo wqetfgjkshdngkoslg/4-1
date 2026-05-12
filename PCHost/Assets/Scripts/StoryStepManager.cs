@@ -5,6 +5,9 @@ using TMPro;
 
 public class StoryStepManager : MonoBehaviour
 {
+    [Header("컷씬 완료 후 이동할 씬 이름")]
+    public string nextSceneName = "HostPc"; 
+
     [Header("스텝별 이미지 (CanvasGroup) - 순서대로")]
     public CanvasGroup[] imageGroups;
 
@@ -23,6 +26,9 @@ public class StoryStepManager : MonoBehaviour
 
     [Header("타이핑 완료 후 다음 스텝까지 대기 시간 (초)")]
     public float waitAfterTyping = 2f;
+
+    [Header("마지막 스텝 추가 대기 시간 (초)")]
+    public float finalExtraWait = 3f;
 
     private bool _finishedAll = false;
 
@@ -72,8 +78,13 @@ public class StoryStepManager : MonoBehaviour
 
             // 3) 타이핑 완료 후 대기
             yield return new WaitForSeconds(waitAfterTyping);
-        }
 
+
+            yield return new WaitForSeconds(waitAfterTyping);
+
+            if (i == maxSteps - 1)
+                yield return new WaitForSeconds(finalExtraWait);
+        }
         // 모든 스텝 완료 → 로비로 이동
         OnAllStepsFinished();
     }
@@ -111,7 +122,6 @@ public class StoryStepManager : MonoBehaviour
     {
         if (_finishedAll) return;
         _finishedAll = true;
-
-        SceneManager.LoadScene("PC_LobbyScene");
+        SceneManager.LoadScene(nextSceneName); 
     }
 }
