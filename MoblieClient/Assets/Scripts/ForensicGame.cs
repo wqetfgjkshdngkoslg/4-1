@@ -17,9 +17,9 @@ public class ForensicGame : MonoBehaviour
     // ! 버튼 3개
     // ──────────────────────────────────────
     [Header("느낌표 버튼")]
-    public Button exclamationBtn1;  // 금고 손잡이
-    public Button exclamationBtn2;  // 바닥
-    public Button exclamationBtn3;  // 데스크
+    public Button exclamationBtn1;
+    public Button exclamationBtn2;
+    public Button exclamationBtn3;
 
     // ──────────────────────────────────────
     // BrushArea 3개
@@ -44,6 +44,14 @@ public class ForensicGame : MonoBehaviour
     public GameObject brushCirclePrefab;
     public Transform brushContainer;
     public int brushCountToReveal = 30;
+    public float minBrushDistance = 20f;
+
+    // ──────────────────────────────────────
+    // 게임 가이드 팝업
+    // ──────────────────────────────────────
+    [Header("게임 가이드 팝업")]
+    public GameObject guidePopup;
+    public Button startButton;
 
     // ──────────────────────────────────────
     // 가루 뿌리기 버튼
@@ -57,7 +65,7 @@ public class ForensicGame : MonoBehaviour
     // ──────────────────────────────────────
     [Header("지문 발견 팝업")]
     public GameObject evidencePopup;
-    public Image fingerprintPopupImage;  // 팝업에 표시할 지문 이미지
+    public Image fingerprintPopupImage;
     public TextMeshProUGUI popupTitleText;
     public TextMeshProUGUI popupDescText;
     public Button confirmButton;
@@ -72,10 +80,10 @@ public class ForensicGame : MonoBehaviour
     public TextMeshProUGUI resultText;
 
     [Header("용의자 지문 버튼")]
-    public Button fingerprintBtn1;  // 수집가
-    public Button fingerprintBtn2;  // 경비원
-    public Button fingerprintBtn3;  // 비서
-    public Button fingerprintBtn4;  // 청소부
+    public Button fingerprintBtn1;
+    public Button fingerprintBtn2;
+    public Button fingerprintBtn3;
+    public Button fingerprintBtn4;
 
     [Header("용의자 지문 이미지")]
     public Image fpImage1;
@@ -84,26 +92,27 @@ public class ForensicGame : MonoBehaviour
     public Image fpImage4;
 
     [Header("지문 스프라이트")]
-    public Sprite foundSprite;      // 발견된 지문
-    public Sprite fpSprite1;        // 수집가
-    public Sprite fpSprite2;        // 경비원
-    public Sprite fpSprite3;        // 비서
-    public Sprite fpSprite4;        // 청소부
+    public Sprite foundSprite;
+    public Sprite fpSprite1;
+    public Sprite fpSprite2;
+    public Sprite fpSprite3;
+    public Sprite fpSprite4;
 
     // ──────────────────────────────────────
-    // 각 위치별 정답 및 증거 데이터
+    // 정답 데이터
     // ──────────────────────────────────────
     private string[] correctAnswers = { "비서", "청소부", "경비원" };
     private string[] evidenceNames = { "금고 지문", "바닥 지문", "데스크 지문" };
-    private Sprite[] locationSprites; // 각 위치 지문 스프라이트
+    private Sprite[] locationSprites;
 
     // ──────────────────────────────────────
     // 상태 변수
     // ──────────────────────────────────────
-    private int currentLocation = -1;   // 현재 선택된 위치 (0,1,2)
+    private int currentLocation = -1;
     private bool powderSpread = false;
     private bool fingerFound = false;
     private int brushCount = 0;
+    private Vector2 lastBrushPos = Vector2.zero;
     private RectTransform currentBrushArea;
     private GameObject currentFingerprintImage;
     private List<bool> locationCleared = new List<bool> { false, false, false };
@@ -113,7 +122,11 @@ public class ForensicGame : MonoBehaviour
     // ──────────────────────────────────────
     void Start()
     {
-        // 초기 숨김
+        guidePopup.SetActive(true);
+        exclamationBtn1.gameObject.SetActive(false);
+        exclamationBtn2.gameObject.SetActive(false);
+        exclamationBtn3.gameObject.SetActive(false);
+        startButton.onClick.AddListener(OnStartClicked);
         dimBackground.SetActive(false);
         fingerprintImage1.SetActive(false);
         fingerprintImage2.SetActive(false);
@@ -122,38 +135,42 @@ public class ForensicGame : MonoBehaviour
         evidencePopup.SetActive(false);
         afisPanel.SetActive(false);
 
-        // 지문 스프라이트 로드
+        // 스프라이트 로드
         if (foundSprite == null) foundSprite = Resources.Load<Sprite>("Fingerprints/found_fingerprint");
         if (fpSprite1 == null) fpSprite1 = Resources.Load<Sprite>("Fingerprints/fingerprint_1");
         if (fpSprite2 == null) fpSprite2 = Resources.Load<Sprite>("Fingerprints/fingerprint_2");
         if (fpSprite3 == null) fpSprite3 = Resources.Load<Sprite>("Fingerprints/fingerprint_3");
         if (fpSprite4 == null) fpSprite4 = Resources.Load<Sprite>("Fingerprints/fingerprint_4");
 
-        // 위치별 지문 스프라이트 (비서/청소부/경비원)
         locationSprites = new Sprite[] { fpSprite3, fpSprite4, fpSprite2 };
 
-        // AFIS 지문 이미지 적용
         if (fpImage1 != null && fpSprite1 != null) fpImage1.sprite = fpSprite1;
         if (fpImage2 != null && fpSprite2 != null) fpImage2.sprite = fpSprite2;
         if (fpImage3 != null && fpSprite3 != null) fpImage3.sprite = fpSprite3;
         if (fpImage4 != null && fpSprite4 != null) fpImage4.sprite = fpSprite4;
 
-        // ! 버튼 이벤트
         exclamationBtn1.onClick.AddListener(() => OnExclamationClicked(0));
         exclamationBtn2.onClick.AddListener(() => OnExclamationClicked(1));
         exclamationBtn3.onClick.AddListener(() => OnExclamationClicked(2));
 
-        // 가루 뿌리기 버튼
         powderButton.onClick.AddListener(OnPowderClicked);
-
-        // 팝업 확인 버튼
         confirmButton.onClick.AddListener(OnConfirmClicked);
 
-        // AFIS 버튼
-        fingerprintBtn1.onClick.AddListener(() => OnSuspectSelected("수집가", 0));
-        fingerprintBtn2.onClick.AddListener(() => OnSuspectSelected("경비원", 1));
-        fingerprintBtn3.onClick.AddListener(() => OnSuspectSelected("비서", 2));
-        fingerprintBtn4.onClick.AddListener(() => OnSuspectSelected("청소부", 3));
+        fingerprintBtn1.onClick.AddListener(() => OnSuspectSelected("수집가"));
+        fingerprintBtn2.onClick.AddListener(() => OnSuspectSelected("경비원"));
+        fingerprintBtn3.onClick.AddListener(() => OnSuspectSelected("비서"));
+        fingerprintBtn4.onClick.AddListener(() => OnSuspectSelected("청소부"));
+    }
+
+    // ──────────────────────────────────────
+    // 가이드 팝업 시작 버튼
+    // ──────────────────────────────────────
+    void OnStartClicked()
+    {
+        guidePopup.SetActive(false);
+        exclamationBtn1.gameObject.SetActive(true);  
+        exclamationBtn2.gameObject.SetActive(true);
+        exclamationBtn3.gameObject.SetActive(true);
     }
 
     // ──────────────────────────────────────
@@ -167,11 +184,10 @@ public class ForensicGame : MonoBehaviour
         powderSpread = false;
         fingerFound = false;
         brushCount = 0;
+        lastBrushPos = Vector2.zero;
 
-        // 딤 활성화
         dimBackground.SetActive(true);
 
-        // 해당 위치 BrushArea / FingerprintImage 설정
         switch (location)
         {
             case 0:
@@ -202,7 +218,6 @@ public class ForensicGame : MonoBehaviour
         foreach (Transform child in brushContainer)
             Destroy(child.gameObject);
 
-        // 가루 뿌리기 버튼 활성화
         powderButton.gameObject.SetActive(true);
         powderBtnText.text = "가루 뿌리기";
         powderButton.interactable = true;
@@ -244,6 +259,10 @@ public class ForensicGame : MonoBehaviour
     // ──────────────────────────────────────
     void OnBrush(Vector2 screenPos)
     {
+        // 최소 이동 거리 체크
+        if (Vector2.Distance(screenPos, lastBrushPos) < minBrushDistance) return;
+        lastBrushPos = screenPos;
+
         if (!RectTransformUtility.ScreenPointToLocalPointInRectangle(
             currentBrushArea, screenPos, null, out Vector2 localPos)) return;
 
@@ -253,8 +272,6 @@ public class ForensicGame : MonoBehaviour
         GameObject circle = Instantiate(brushCirclePrefab, brushContainer);
         circle.GetComponent<RectTransform>().anchoredPosition =
             currentBrushArea.anchoredPosition + localPos;
-
-        // 일정 시간 후 삭제
         Destroy(circle, 1.5f);
 
         brushCount++;
@@ -269,8 +286,8 @@ public class ForensicGame : MonoBehaviour
             img.color = c;
         }
 
-        // 지문 발견 판정
-        if (brushCount >= brushCountToReveal && !fingerFound)
+        // 80% 달성 시 발견
+        if (brushCount >= brushCountToReveal * 0.8f && !fingerFound)
         {
             fingerFound = true;
             StartCoroutine(ShowFingerprintFound());
@@ -288,7 +305,6 @@ public class ForensicGame : MonoBehaviour
         popupTitleText.text = "지문 발견!";
         popupDescText.text = "지문을 채취했습니다!\nAFIS로 대조해보세요!";
 
-        // 발견된 위치 지문 이미지 팝업에 자동 표시
         if (fingerprintPopupImage != null && locationSprites[currentLocation] != null)
             fingerprintPopupImage.sprite = locationSprites[currentLocation];
     }
@@ -300,7 +316,6 @@ public class ForensicGame : MonoBehaviour
     {
         evidencePopup.SetActive(false);
 
-        // 발견된 지문 이미지 설정
         if (foundFingerprintImage != null && locationSprites[currentLocation] != null)
             foundFingerprintImage.sprite = locationSprites[currentLocation];
 
@@ -312,7 +327,7 @@ public class ForensicGame : MonoBehaviour
     // ──────────────────────────────────────
     // 용의자 선택
     // ──────────────────────────────────────
-    void OnSuspectSelected(string suspectName, int btnIndex)
+    void OnSuspectSelected(string suspectName)
     {
         if (suspectName == correctAnswers[currentLocation])
         {
@@ -332,23 +347,22 @@ public class ForensicGame : MonoBehaviour
     // ──────────────────────────────────────
     IEnumerator EvidenceObtained()
     {
-        // 증거 저장
         string evidence = evidenceNames[currentLocation];
-        if (!DataManager.Instance.CollectedEvidences.Contains(evidence))
-            DataManager.Instance.CollectedEvidences.Add(evidence);
+        if (DataManager.Instance != null)
+        {
+            if (!DataManager.Instance.CollectedEvidences.Contains(evidence))
+                DataManager.Instance.CollectedEvidences.Add(evidence);
+        }
 
-        // 해당 위치 완료 처리
         locationCleared[currentLocation] = true;
 
         yield return new WaitForSeconds(2f);
 
-        // AFIS 닫고 다시 현장으로
         afisPanel.SetActive(false);
         dimBackground.SetActive(false);
         currentFingerprintImage.SetActive(false);
         powderButton.gameObject.SetActive(false);
 
-        // ! 버튼 비활성화 (완료된 위치)
         switch (currentLocation)
         {
             case 0: exclamationBtn1.gameObject.SetActive(false); break;
@@ -359,7 +373,7 @@ public class ForensicGame : MonoBehaviour
         currentLocation = -1;
         currentBrushArea = null;
 
-        // 3개 다 완료하면 로비로
+        // 3개 완료 시 로비로
         if (locationCleared[0] && locationCleared[1] && locationCleared[2])
         {
             yield return new WaitForSeconds(1f);
