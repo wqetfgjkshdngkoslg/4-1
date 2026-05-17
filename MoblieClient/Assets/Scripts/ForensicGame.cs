@@ -79,11 +79,8 @@ public class ForensicGame : MonoBehaviour
     public TextMeshProUGUI afisDescText;
     public TextMeshProUGUI resultText;
 
-    [Header("용의자 지문 버튼")]
-    public Button fingerprintBtn1;
-    public Button fingerprintBtn2;
-    public Button fingerprintBtn3;
-    public Button fingerprintBtn4;
+    [Header("드래그 가능한 발견 지문")]
+    public DraggableFingerprint draggableFingerprint;
 
     [Header("용의자 지문 이미지")]
     public Image fpImage1;
@@ -97,6 +94,21 @@ public class ForensicGame : MonoBehaviour
     public Sprite fpSprite2;
     public Sprite fpSprite3;
     public Sprite fpSprite4;
+
+    // ──────────────────────────────────────
+    // 문지르기 게이지
+    // ──────────────────────────────────────
+    [Header("문지르기 게이지")]
+    public GameObject gaugeBackground;
+    public Image gaugeFill;
+
+    // ──────────────────────────────────────
+    // 미션 완료
+    // ──────────────────────────────────────
+    [Header("미션 완료")]
+    public GameObject clearTitleText;
+    public GameObject clearDescText;
+    public TextMeshProUGUI countdownText;
 
     // ──────────────────────────────────────
     // 정답 데이터
@@ -134,6 +146,12 @@ public class ForensicGame : MonoBehaviour
         powderButton.gameObject.SetActive(false);
         evidencePopup.SetActive(false);
         afisPanel.SetActive(false);
+        clearTitleText.SetActive(false);
+        clearDescText.SetActive(false);
+        if (countdownText != null)
+            countdownText.gameObject.SetActive(false);
+        gaugeBackground.SetActive(false);
+        if (gaugeFill != null) gaugeFill.fillAmount = 0f;
 
         // 스프라이트 로드
         if (foundSprite == null) foundSprite = Resources.Load<Sprite>("Fingerprints/found_fingerprint");
@@ -155,11 +173,6 @@ public class ForensicGame : MonoBehaviour
 
         powderButton.onClick.AddListener(OnPowderClicked);
         confirmButton.onClick.AddListener(OnConfirmClicked);
-
-        fingerprintBtn1.onClick.AddListener(() => OnSuspectSelected("수집가"));
-        fingerprintBtn2.onClick.AddListener(() => OnSuspectSelected("경비원"));
-        fingerprintBtn3.onClick.AddListener(() => OnSuspectSelected("비서"));
-        fingerprintBtn4.onClick.AddListener(() => OnSuspectSelected("청소부"));
     }
 
     // ──────────────────────────────────────
@@ -168,7 +181,7 @@ public class ForensicGame : MonoBehaviour
     void OnStartClicked()
     {
         guidePopup.SetActive(false);
-        exclamationBtn1.gameObject.SetActive(true);  
+        exclamationBtn1.gameObject.SetActive(true);
         exclamationBtn2.gameObject.SetActive(true);
         exclamationBtn3.gameObject.SetActive(true);
     }
@@ -204,7 +217,6 @@ public class ForensicGame : MonoBehaviour
                 break;
         }
 
-        // 지문 이미지 투명하게 초기화
         var img = currentFingerprintImage.GetComponent<Image>();
         if (img != null)
         {
@@ -214,13 +226,16 @@ public class ForensicGame : MonoBehaviour
         }
         currentFingerprintImage.SetActive(true);
 
-        // 브러시 컨테이너 초기화
         foreach (Transform child in brushContainer)
             Destroy(child.gameObject);
 
         powderButton.gameObject.SetActive(true);
         powderBtnText.text = "가루 뿌리기";
         powderButton.interactable = true;
+
+        // 게이지 초기화 및 표시
+        gaugeBackground.SetActive(true);
+        if (gaugeFill != null) gaugeFill.fillAmount = 0f;
     }
 
     // ──────────────────────────────────────
@@ -259,7 +274,6 @@ public class ForensicGame : MonoBehaviour
     // ──────────────────────────────────────
     void OnBrush(Vector2 screenPos)
     {
-        // 최소 이동 거리 체크
         if (Vector2.Distance(screenPos, lastBrushPos) < minBrushDistance) return;
         lastBrushPos = screenPos;
 
@@ -268,7 +282,6 @@ public class ForensicGame : MonoBehaviour
 
         if (!currentBrushArea.rect.Contains(localPos)) return;
 
-        // 브러시 원 생성
         GameObject circle = Instantiate(brushCirclePrefab, brushContainer);
         circle.GetComponent<RectTransform>().anchoredPosition =
             currentBrushArea.anchoredPosition + localPos;
@@ -276,7 +289,6 @@ public class ForensicGame : MonoBehaviour
 
         brushCount++;
 
-        // 지문 서서히 나타내기
         float alpha = Mathf.Clamp01((float)brushCount / brushCountToReveal);
         var img = currentFingerprintImage?.GetComponent<Image>();
         if (img != null)
@@ -286,7 +298,10 @@ public class ForensicGame : MonoBehaviour
             img.color = c;
         }
 
-        // 80% 달성 시 발견
+        // 게이지 업데이트
+        if (gaugeFill != null)
+            gaugeFill.fillAmount = alpha;
+
         if (brushCount >= brushCountToReveal * 0.8f && !fingerFound)
         {
             fingerFound = true;
@@ -302,6 +317,7 @@ public class ForensicGame : MonoBehaviour
         yield return new WaitForSeconds(0.5f);
         powderButton.gameObject.SetActive(false);
         evidencePopup.SetActive(true);
+        gaugeBackground.SetActive(false);
         popupTitleText.text = "지문 발견!";
         popupDescText.text = "지문을 채취했습니다!\nAFIS로 대조해보세요!";
 
@@ -315,30 +331,32 @@ public class ForensicGame : MonoBehaviour
     void OnConfirmClicked()
     {
         evidencePopup.SetActive(false);
+        gaugeBackground.SetActive(false);
 
         if (foundFingerprintImage != null && locationSprites[currentLocation] != null)
             foundFingerprintImage.sprite = locationSprites[currentLocation];
 
-        afisDescText.text = "발견된 지문과 일치하는 용의자를 선택하세요!";
+        afisDescText.text = "발견된 지문을 용의자 지문 위에 올려보세요!";
         resultText.text = "";
         afisPanel.SetActive(true);
     }
 
     // ──────────────────────────────────────
-    // 용의자 선택
+    // 드롭존에서 호출
     // ──────────────────────────────────────
-    void OnSuspectSelected(string suspectName)
+    public void OnSuspectDropped(string suspectName, DraggableFingerprint draggable)
     {
         if (suspectName == correctAnswers[currentLocation])
         {
-            resultText.text = $"✅ {suspectName}의 지문입니다!";
+            resultText.text = $"{suspectName}의 지문과 일치합니다!";
             resultText.color = Color.green;
             StartCoroutine(EvidenceObtained());
         }
         else
         {
-            resultText.text = $"❌ {suspectName}의 지문이 아니에요. 다시 확인해보세요!";
+            resultText.text = $"{suspectName}의 지문이 아니에요. 다시 시도해보세요!";
             resultText.color = Color.red;
+            draggable.ReturnToOriginal();
         }
     }
 
@@ -362,6 +380,8 @@ public class ForensicGame : MonoBehaviour
         dimBackground.SetActive(false);
         currentFingerprintImage.SetActive(false);
         powderButton.gameObject.SetActive(false);
+        gaugeBackground.SetActive(false);
+        if (gaugeFill != null) gaugeFill.fillAmount = 0f;
 
         switch (currentLocation)
         {
@@ -373,11 +393,28 @@ public class ForensicGame : MonoBehaviour
         currentLocation = -1;
         currentBrushArea = null;
 
-        // 3개 완료 시 로비로
+        // 3개 완료 시 미션 완료 팝업
         if (locationCleared[0] && locationCleared[1] && locationCleared[2])
         {
-            yield return new WaitForSeconds(1f);
-            SceneManager.LoadScene("Mobile_LobbyScene");
+            StartCoroutine(ShowClearPopup());
         }
+    }
+
+    // ──────────────────────────────────────
+    // 미션 완료 팝업 + 카운트다운
+    // ──────────────────────────────────────
+    IEnumerator ShowClearPopup()
+    {
+        clearTitleText.SetActive(true);
+        clearDescText.SetActive(true);
+        countdownText.gameObject.SetActive(true);
+
+        for (int i = 3; i > 0; i--)
+        {
+            countdownText.text = i.ToString();
+            yield return new WaitForSeconds(1f);
+        }
+
+        SceneManager.LoadScene("Mobile_LobbyScene");
     }
 }
