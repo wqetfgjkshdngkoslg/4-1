@@ -12,11 +12,12 @@ public class SuspectSceneUI : MonoBehaviour
     [Header("정답 설정")]
     public string correctSuspect = "비서";
     public List<string> correctEvidences = new List<string>
-    {
-        "금고 지문",
-        "CCTV 포착",
-        "거짓 진술"
-    };
+{
+    "금고 지문",
+    "비서 금고 앞 포착",
+    "비서 복도 서성임",
+    "비서 서류가방 수상 목격"
+};
 
     // ──────────────────────────────────────
     // 용의자 카드 버튼 4개
@@ -66,8 +67,15 @@ public class SuspectSceneUI : MonoBehaviour
     // ──────────────────────────────────────
     [Header("증거 목록 팝업")]
     public GameObject evidenceListPopup;
-    public Transform evidenceContent;       // ScrollView → Viewport → Content
-    public GameObject evidenceBtnTemplate;  // 버튼 템플릿 (비활성화 상태)
+    public Transform evidenceContent;
+    public GameObject evidenceBtnTemplate;
+
+    [Header("수신된 증거 팝업")]
+    public Button evidenceListButton;
+    public GameObject receivedEvidencePopup;
+    public Transform receivedEvidenceContent;
+    public GameObject receivedEvidenceTemplate;
+    public Button closeReceivedEvidenceButton;
 
     // ──────────────────────────────────────
     // 용의자 데이터
@@ -89,13 +97,8 @@ public class SuspectSceneUI : MonoBehaviour
     private string[] selectedEvidences = new string[4];
     private int currentPlusSlot = -1;
 
-    // 수집된 증거 목록 (나중에 GameManager에서 받아올 예정)
-    private List<string> collectedEvidences = new List<string>
-    {
-        "금고 지문",
-        "CCTV 포착",
-        "거짓 진술"
-    };
+    // 수집된 증거 목록 (GameManager.ReceivedEvidences에서 받아옴)
+    public List<string> collectedEvidences = new List<string>();
 
     // ──────────────────────────────────────
     // Start
@@ -125,6 +128,20 @@ public class SuspectSceneUI : MonoBehaviour
 
         // 템플릿 숨기기
         evidenceBtnTemplate.SetActive(false);
+
+        // 수신된 증거 팝업 초기화
+        if (receivedEvidencePopup != null)
+            receivedEvidencePopup.SetActive(false);
+        if (receivedEvidenceTemplate != null)
+            receivedEvidenceTemplate.SetActive(false);
+        if (evidenceListButton != null)
+            evidenceListButton.onClick.AddListener(OpenReceivedEvidencePopup);
+        if (closeReceivedEvidenceButton != null)
+            closeReceivedEvidenceButton.onClick.AddListener(
+                () => receivedEvidencePopup.SetActive(false));
+
+        // GameManager에서 증거 로드
+        collectedEvidences = new List<string>(GameManager.ReceivedEvidences);
     }
 
     // ──────────────────────────────────────
@@ -221,6 +238,49 @@ public class SuspectSceneUI : MonoBehaviour
     // ──────────────────────────────────────
     // 검거 버튼
     // ──────────────────────────────────────
+    // ──────────────────────────────────────
+    // GameManager에서 증거 수신 시 호출
+    // ──────────────────────────────────────
+    public void OnEvidencesReceived(List<string> evidences)
+    {
+        collectedEvidences = new List<string>(evidences);
+        Debug.Log($"SuspectScene 증거 업데이트: {collectedEvidences.Count}개");
+    }
+
+    // ──────────────────────────────────────
+    // 수신된 증거 팝업 열기
+    // ──────────────────────────────────────
+    void OpenReceivedEvidencePopup()
+    {
+        foreach (Transform child in receivedEvidenceContent)
+        {
+            if (child.gameObject != receivedEvidenceTemplate)
+                Destroy(child.gameObject);
+        }
+
+        var evidences = GameManager.ReceivedEvidences;
+
+        if (evidences.Count == 0)
+        {
+            GameObject item = Instantiate(receivedEvidenceTemplate, receivedEvidenceContent);
+            item.SetActive(true);
+            item.GetComponentInChildren<TextMeshProUGUI>().text = "아직 수신된 증거가 없습니다.";
+            item.GetComponent<Button>().interactable = false;
+        }
+        else
+        {
+            foreach (string evidence in evidences)
+            {
+                GameObject item = Instantiate(receivedEvidenceTemplate, receivedEvidenceContent);
+                item.SetActive(true);
+                item.GetComponentInChildren<TextMeshProUGUI>().text = evidence;
+                item.GetComponent<Button>().interactable = false;
+            }
+        }
+
+        receivedEvidencePopup.SetActive(true);
+    }
+
     void OnArrestClicked()
     {
         // 용의자 확인
