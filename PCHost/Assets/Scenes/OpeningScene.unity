@@ -1115,7 +1115,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 547393977721c7c47bfeefab5f86ef57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StoryStepManager
-  nextSceneName: HostPc
+  nextSceneName: PC_LobbyScene
   imageGroups:
   - {fileID: 614929687}
   - {fileID: 2028315128}
