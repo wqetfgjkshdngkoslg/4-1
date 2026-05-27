@@ -6,7 +6,7 @@ using TMPro;
 public class StoryStepManager : MonoBehaviour
 {
     [Header("컷씬 완료 후 이동할 씬 이름")]
-    public string nextSceneName = "HostPc"; 
+    public string nextSceneName = "PC_LobbyScene"; 
 
     [Header("스텝별 이미지 (CanvasGroup) - 순서대로")]
     public CanvasGroup[] imageGroups;

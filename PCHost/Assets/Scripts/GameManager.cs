@@ -14,6 +14,9 @@ public class GameManager : NetworkBehaviour
         = new Dictionary<int, string>();
     private int maxPlayers = 0;
 
+    // PC에서 수신한 증거 목록
+    public static List<string> ReceivedEvidences = new List<string>();
+
     void Awake()
     {
         if (Instance == null) Instance = this;
@@ -22,7 +25,6 @@ public class GameManager : NetworkBehaviour
     public override void OnStartClient()
     {
         base.OnStartClient();
-
     }
 
     [ServerRpc(RequireOwnership = false)]
@@ -69,16 +71,56 @@ public class GameManager : NetworkBehaviour
         }
     }
 
-    [TargetRpc]
-    void SetMaxPlayersAndLoadSceneTargetRpc(
-    NetworkConnection conn, int count)
+    // ──────────────────────────────────────
+    // 증거 송신 RPC (모바일 → PC)
+    // ──────────────────────────────────────
+    [ServerRpc(RequireOwnership = false)]
+    public void ShareEvidencesServerRpc(
+        string[] evidences,
+        NetworkConnection sender = null)
     {
-#if UNITY_ANDROID
-    DataManager.Instance.MaxPlayers = count;
-    UnityEngine.SceneManagement.SceneManager
-        .LoadScene("JobSelectScene");
+        Debug.Log($"증거 수신: {evidences.Length}개");
+        ReceiveEvidencesClientRpc(evidences);
+    }
+
+    [ObserversRpc]
+    void ReceiveEvidencesClientRpc(string[] evidences)
+    {
+        foreach (string evidence in evidences)
+        {
+            if (!ReceivedEvidences.Contains(evidence))
+                ReceivedEvidences.Add(evidence);
+        }
+        Debug.Log($"증거 수신 완료: {ReceivedEvidences.Count}개");
+
+#if !UNITY_ANDROID
+        // PC에서만 SuspectScene 업데이트
+        var suspectScene = FindFirstObjectByType<SuspectSceneUI>();
+        suspectScene?.OnEvidencesReceived(ReceivedEvidences);
 #endif
     }
+
+    // ──────────────────────────────────────
+    // PC 단독 테스트용
+    // ──────────────────────────────────────
+    public static void AddEvidenceDirectly(string evidence)
+    {
+        if (!ReceivedEvidences.Contains(evidence))
+            ReceivedEvidences.Add(evidence);
+        Debug.Log($"증거 직접 추가: {evidence}");
+    }
+
+    [TargetRpc]
+    void SetMaxPlayersAndLoadSceneTargetRpc(
+        NetworkConnection conn, int count)
+    {
+#if UNITY_ANDROID
+        DataManager.Instance.MaxPlayers = count;
+        UnityEngine.SceneManagement.SceneManager
+            .LoadScene("JobSelectScene");
+#endif
+    }
+
     [TargetRpc]
     void UpdateJobStatusTargetRpc(
         NetworkConnection conn, string jobName, bool isTaken)
