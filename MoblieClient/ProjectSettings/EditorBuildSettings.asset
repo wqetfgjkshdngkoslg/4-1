@@ -23,6 +23,9 @@ EditorBuildSettings:
   - enabled: 1
     path: Assets/Scenes/WitnessScene.unity
     guid: 14893adde2123b64d821896bb30c0ce8
+  - enabled: 1
+    path: Assets/Scenes/CyberScene.unity
+    guid: a942c6f7ab62046439eff5f421aacb22
   - enabled: 0
     path: Assets/Scenes/SampleScene.unity
     guid: 99c9720ab356a0642a771bea13969a05

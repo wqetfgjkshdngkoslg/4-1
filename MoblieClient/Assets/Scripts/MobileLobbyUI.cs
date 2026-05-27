@@ -24,6 +24,7 @@ public class MobileLobbyUI : MonoBehaviour
     public Button forensicButton;
     public Button cctvButton;
     public Button witnessButton;
+    public Button cyberButton;
 
     void Start()
     {
@@ -53,6 +54,9 @@ public class MobileLobbyUI : MonoBehaviour
         if (witnessButton != null)
             witnessButton.onClick.AddListener(
                 () => SceneManager.LoadScene("WitnessScene"));
+        if (cyberButton != null)
+            cyberButton.onClick.AddListener(
+                () => SceneManager.LoadScene("CyberScene"));
     }
 
     // 式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式式

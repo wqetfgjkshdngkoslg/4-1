@@ -12,12 +12,13 @@ public class SuspectSceneUI : MonoBehaviour
     [Header("정답 설정")]
     public string correctSuspect = "비서";
     public List<string> correctEvidences = new List<string>
-{
-    "금고 지문",
-    "비서 금고 앞 포착",
-    "비서 복도 서성임",
-    "비서 서류가방 수상 목격"
-};
+    {
+        "금고 지문",
+        "비서 금고 앞 포착",
+        "비서 복도 서성임",
+        "비서 서류가방 수상 목격",
+        "비서 레드 다이아 반지 시세 검색 기록"
+    };
 
     // ──────────────────────────────────────
     // 용의자 카드 버튼 4개
@@ -39,25 +40,27 @@ public class SuspectSceneUI : MonoBehaviour
     public Image suspectPhoto;
     public TextMeshProUGUI nameText;
     public TextMeshProUGUI jobText;
-    public TextMeshProUGUI statementText;
 
     [Header("팝업 - 증거 슬롯 Image")]
     public Image evidenceSlot1;
     public Image evidenceSlot2;
     public Image evidenceSlot3;
     public Image evidenceSlot4;
+    public Image evidenceSlot5;
 
     [Header("팝업 - 슬롯 텍스트")]
     public TextMeshProUGUI slotText1;
     public TextMeshProUGUI slotText2;
     public TextMeshProUGUI slotText3;
     public TextMeshProUGUI slotText4;
+    public TextMeshProUGUI slotText5;
 
     [Header("팝업 - + 버튼")]
     public Button plusBtn1;
     public Button plusBtn2;
     public Button plusBtn3;
     public Button plusBtn4;
+    public Button plusBtn5;
 
     [Header("팝업 - 검거 버튼")]
     public Button arrestButton;
@@ -82,19 +85,13 @@ public class SuspectSceneUI : MonoBehaviour
     // ──────────────────────────────────────
     private string[] suspectNames = { "수집가", "경비원", "비서", "청소부" };
     private string[] suspectJobs = { "보석 수집가", "은행 경비원", "주얼리씨 비서", "은행 청소부" };
-    private string[] suspectStatements =
-    {
-        "진술: 저는 그날 가게에 있었어요.",
-        "진술: 저는 졸음 약을 마셔서 몰랐어요.",
-        "진술: 저는 화장실에만 있었어요.",
-        "진술: 저는 지하에서 청소했어요."
-    };
+
 
     // ──────────────────────────────────────
     // 상태 변수
     // ──────────────────────────────────────
     private string selectedSuspect = "";
-    private string[] selectedEvidences = new string[4];
+    private string[] selectedEvidences = new string[5];
     private int currentPlusSlot = -1;
 
     // 수집된 증거 목록 (GameManager.ReceivedEvidences에서 받아옴)
@@ -122,6 +119,7 @@ public class SuspectSceneUI : MonoBehaviour
         plusBtn2.onClick.AddListener(() => OpenEvidenceList(1));
         plusBtn3.onClick.AddListener(() => OpenEvidenceList(2));
         plusBtn4.onClick.AddListener(() => OpenEvidenceList(3));
+        plusBtn5.onClick.AddListener(() => OpenEvidenceList(4));
 
         // 검거 버튼
         arrestButton.onClick.AddListener(OnArrestClicked);
@@ -153,7 +151,6 @@ public class SuspectSceneUI : MonoBehaviour
 
         nameText.text = $"이름: {suspectNames[index]}";
         jobText.text = $"직업: {suspectJobs[index]}";
-        statementText.text = suspectStatements[index];
 
         Sprite photo = Resources.Load<Sprite>($"Suspects/suspect_{index + 1}");
         if (photo != null)
@@ -226,6 +223,7 @@ public class SuspectSceneUI : MonoBehaviour
         slotText2.text = selectedEvidences[1] ?? "";
         slotText3.text = selectedEvidences[2] ?? "";
         slotText4.text = selectedEvidences[3] ?? "";
+        slotText5.text = selectedEvidences[4] ?? "";
     }
 
     void ClearSlots()
@@ -283,6 +281,14 @@ public class SuspectSceneUI : MonoBehaviour
 
     void OnArrestClicked()
     {
+        // 임시 디버그
+        Debug.Log($"선택 용의자: [{selectedSuspect}]");
+        Debug.Log($"정답 용의자: [{correctSuspect}]");
+        for (int i = 0; i < selectedEvidences.Length; i++)
+            Debug.Log($"선택 증거 {i}: [{selectedEvidences[i]}]");
+        foreach (string c in correctEvidences)
+            Debug.Log($"정답 증거: [{c}]");
+
         // 용의자 확인
         if (selectedSuspect != correctSuspect)
         {
@@ -311,4 +317,7 @@ public class SuspectSceneUI : MonoBehaviour
 
         SceneManager.LoadScene("ArrestScene");
     }
+
+
+
 }

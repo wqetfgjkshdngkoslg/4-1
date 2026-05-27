@@ -60,10 +60,18 @@ public class CCTVGame : MonoBehaviour
         // 00:30
         { "00:30 비서가\n금고 앞에서 포착됐습니다!\n범행 시간대와 일치합니다.", null, null, null },
         // 01:00
-        { null, null, "01:00 비서가\n서류가방을 꽉 안고\n은행 복도를 서성이는 것이 포착됐습니다!", null },
+        { "01:00 경비원이\n금고 앞을 순찰하는 것이 포착됐습니다.", null, "01:00 비서가\n서류가방을 꽉 안고\n은행 복도를 서성이는 것이 포착됐습니다!", null },
     };
 
-   
+    // [시간대][모니터] 진짜 증거 여부
+    private bool[,] isRealEvidence = new bool[5, 4]
+    {
+        { false, false, false, false }, // 23:00: 가짜/피해자
+        { false, false, false, false }, // 23:30: 가짜
+        { false, false, false, false }, // 00:00: 없음
+        { true,  false, false, false }, // 00:30: 비서★
+        { false, false, true,  false }, // 01:00: 비서★
+    };
 
     // ──────────────────────────────────────
     // 가이드 팝업
@@ -250,9 +258,13 @@ public class CCTVGame : MonoBehaviour
                 DataManager.Instance.CollectedEvidences.Add(evidence);
         }
 
-        // 6개 모두 수집 시 미션 완료
+        // 7개 모두 수집 시 미션 완료
         if (totalEvidenceCount >= maxEvidence)
+        {
+            // 버튼 비활성화
+            SetInteractable(false);
             StartCoroutine(ShowClearPopup());
+        }
     }
 
     // ──────────────────────────────────────
