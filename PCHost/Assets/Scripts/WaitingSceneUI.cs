@@ -69,6 +69,11 @@ public class WaitingSceneUI : MonoBehaviour
     {
         statusText.text = "모든 인원 연결 완료! 오프닝 시작...";
         yield return new WaitForSeconds(1.0f);
+
+        // 모바일 → JobSelectScene 이동 (잠금 상태)
+        var gm2 = FindFirstObjectByType<GameManager>();
+        gm2?.LoadJobSelectSceneServerRpc();
+
         SceneManager.LoadScene("OpeningScene");
     }
 

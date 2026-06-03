@@ -171,4 +171,41 @@ public class GameManager : NetworkBehaviour
         MobileJobSelect.Instance?.OnJobStatusUpdated(jobName, isTaken);
 #endif
     }
+
+    // ──────────────────────────────────────
+    // 모바일 JobSelectScene 이동 RPC
+    // ──────────────────────────────────────
+    [ServerRpc(RequireOwnership = false)]
+    public void LoadJobSelectSceneServerRpc(
+        NetworkConnection sender = null)
+    {
+        LoadJobSelectSceneClientRpc();
+    }
+
+    [ObserversRpc]
+    void LoadJobSelectSceneClientRpc()
+    {
+#if UNITY_ANDROID
+        UnityEngine.SceneManagement.SceneManager
+            .LoadScene("JobSelectScene");
+#endif
+    }
+
+    // ──────────────────────────────────────
+    // 직업 선택 잠금 해제 RPC (오프닝 완료 시)
+    // ──────────────────────────────────────
+    [ServerRpc(RequireOwnership = false)]
+    public void UnlockJobSelectServerRpc(
+        NetworkConnection sender = null)
+    {
+        UnlockJobSelectClientRpc();
+    }
+
+    [ObserversRpc]
+    void UnlockJobSelectClientRpc()
+    {
+#if UNITY_ANDROID
+        MobileJobSelect.Instance?.UnlockJobSelect();
+#endif
+    }
 }

@@ -42,6 +42,7 @@ public class MobileJobSelect : MonoBehaviour
     public TextMeshProUGUI statusText;
 
     private string selectedJob = "";
+    private bool isLocked = true;
 
     void Awake()
     {
@@ -104,6 +105,9 @@ public class MobileJobSelect : MonoBehaviour
                 () => OnJobButtonClicked("배경조사관"));
         }
 
+        // 오프닝 중 잠금
+        statusText.text = "PC에서 오프닝 영상 재생 중입니다.\n잠시 기다려주세요!";
+
         var gm = FindFirstObjectByType<GameManager>();
         gm?.RequestJobStatusServerRpc();
     }
@@ -134,6 +138,11 @@ public class MobileJobSelect : MonoBehaviour
 
     void OnJobButtonClicked(string jobName)
     {
+        if (isLocked)
+        {
+            statusText.text = "PC에서 오프닝 영상 재생 중입니다.\n잠시 기다려주세요!";
+            return;
+        }
         if (selectedJob != "") return;
 
         statusText.text = $"{jobName} 선택 중...";
@@ -161,6 +170,12 @@ public class MobileJobSelect : MonoBehaviour
         SceneManager.LoadScene("Mobile_LobbyScene");
     }
 
+    public void UnlockJobSelect()
+    {
+        isLocked = false;
+        statusText.text = "직업을 선택하세요!";
+    }
+
     public void OnJobRejected(string jobName)
     {
         statusText.text = $"❌ {jobName} 은 이미 선택됨";
@@ -168,10 +183,11 @@ public class MobileJobSelect : MonoBehaviour
 
     public void OnJobStatusUpdated(string jobName, bool isTaken)
     {
+        int max = DataManager.Instance.MaxPlayers;
         Button btn = jobName switch
         {
-            "수사관1" => Btn2_1,
-            "수사관2" => Btn2_2,
+            "수사관1" => max == 2 ? Btn2_1 : Btn3_1,
+            "수사관2" => max == 2 ? Btn2_2 : Btn3_2,
             "수사관3" => Btn3_3,
             "CCTV분석관" => CCTV,
             "목격자조사관" => Witness,
@@ -181,8 +197,6 @@ public class MobileJobSelect : MonoBehaviour
         };
 
         if (btn != null)
-        {
             btn.interactable = !isTaken;
-        }
     }
 }
