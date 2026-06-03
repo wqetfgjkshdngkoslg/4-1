@@ -107,15 +107,30 @@ public class StoryStepManager : MonoBehaviour
         }
     }
 
+    [Header("완료 후 설정")]
+    public string nextScene = "PC_LobbyScene";
+    public bool unlockJobSelect = false;  // 오프닝씬에서만 true
+    public bool closeServer = false;      // 성공/실패씬에서만 true
+
     private void OnAllStepsFinished()
     {
         if (_finishedAll) return;
         _finishedAll = true;
 
-        // 모바일 직업 선택 잠금 해제
         var gm = FindFirstObjectByType<GameManager>();
-        gm?.UnlockJobSelectServerRpc();
 
-        SceneManager.LoadScene("PC_LobbyScene");
+        // 직업 선택 잠금 해제 (오프닝 완료 시)
+        if (unlockJobSelect)
+            gm?.UnlockJobSelectServerRpc();
+
+        // 서버 종료 (성공/실패씬 완료 시)
+        if (closeServer)
+        {
+            var nm = FishNet.InstanceFinder.NetworkManager;
+            if (nm != null && nm.IsServerStarted)
+                nm.ServerManager.StopConnection(true);
+        }
+
+        SceneManager.LoadScene(nextScene);
     }
 }

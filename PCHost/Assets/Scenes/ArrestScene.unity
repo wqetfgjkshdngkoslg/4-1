@@ -148,7 +148,6 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 547393977721c7c47bfeefab5f86ef57, type: 3}
   m_Name: 
   m_EditorClassIdentifier: Assembly-CSharp::StoryStepManager
-  nextSceneName: HostPc
   imageGroups:
   - {fileID: 1063398519}
   - {fileID: 1272506397}
@@ -162,7 +161,9 @@ MonoBehaviour:
   fadeDuration: 1
   charInterval: 0.03
   waitAfterTyping: 2
-  finalExtraWait: 3
+  nextScene: HostPc
+  unlockJobSelect: 0
+  closeServer: 1
 --- !u!4 &24949608
 Transform:
   m_ObjectHideFlags: 0
