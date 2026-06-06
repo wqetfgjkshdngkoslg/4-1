@@ -42,6 +42,12 @@ public class WitnessGame : MonoBehaviour
     };
 
     // ──────────────────────────────────────
+    // 대화 매니저
+    // ──────────────────────────────────────
+    [Header("대화 매니저")]
+    public DialogueManager dialogueManager;
+
+    // ──────────────────────────────────────
     // 가이드 팝업
     // ──────────────────────────────────────
     [Header("가이드 팝업")]
@@ -162,19 +168,98 @@ public class WitnessGame : MonoBehaviour
     // ──────────────────────────────────────
     void OnWitnessClicked(int index)
     {
+        // ! 버튼 숨기기
+        witnessBtn1.gameObject.SetActive(false);
+        witnessBtn2.gameObject.SetActive(false);
+        witnessBtn3.gameObject.SetActive(false);
         if (witnessCleared[index]) return;
 
         currentWitness = index;
         resultText.text = "";
 
-        // 목격자 진술 표시
-        witnessNameText.text = $"목격자: {witnessNames[index]}";
-        witnessStatementText.text = $"\"{witnessStatements[index]}\"";
+        // 대화 먼저 시작
+        StartWitnessDialogue(index);
+    }
 
-        // 카드 색상 초기화
-        ResetCardColors();
+    // ──────────────────────────────────────
+    // 대화 시작
+    // ──────────────────────────────────────
+    void StartWitnessDialogue(int index)
+    {
+        var lines = GetDialogueLines(index);
+        dialogueManager.StartDialogue(lines, () =>
+        {
+            // 대화 완료 후 기존 팝업 열기
+            witnessNameText.text = $"목격자: {witnessNames[index]}";
+            witnessStatementText.text = $"\"{witnessStatements[index]}\"";
+            ResetCardColors();
+            statementPopup.SetActive(true);
+        });
+    }
 
-        statementPopup.SetActive(true);
+    // ──────────────────────────────────────
+    // 목격자별 대화 스크립트
+    // ──────────────────────────────────────
+    List<DialogueManager.DialogueLine> GetDialogueLines(int index)
+    {
+        var lines = new List<DialogueManager.DialogueLine>();
+
+        if (index == 0) // 은행 직원
+        {
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "은행 직원",
+                text = "그날 저는 은행에서 평소처럼 근무하고 있었어요."
+            });
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "은행 직원",
+                text = "<color=yellow><b>비서가 서류가방을 가슴에 꽉 안고</b></color>\n화장실 복도에서 장시간 서성이는 것을\n제 눈으로 직접 봤어요!"
+            });
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "은행 직원",
+                text = "분명히 뭔가 이상했어요.\n평소엔 그런 행동을 하는 사람이 아니었거든요."
+            });
+        }
+        else if (index == 1) // 은행 방문객
+        {
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "은행 방문객",
+                text = "저는 그날 볼일이 있어서 은행에 들렀어요."
+            });
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "은행 방문객",
+                text = "<color=yellow><b>수집가가 금고 쪽 복도에서\n두리번거리고 있었어요.</b></color>\n분명히 봤습니다."
+            });
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "은행 방문객",
+                text = "뭔가 찾는 것처럼 보였어요.\n수상한 느낌이 들었죠."
+            });
+        }
+        else // 청소 동료
+        {
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "청소 동료",
+                text = "저는 그날 함께 일하는 동료를 봤어요."
+            });
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "청소 동료",
+                text = "<color=yellow><b>청소부가 청소 카트도 없이\n수상한 가방을 들고</b></color>\n은행 안을 돌아다니고 있었어요."
+            });
+            lines.Add(new DialogueManager.DialogueLine
+            {
+                speakerName = "청소 동료",
+                text = "청소 카트 없이 다니는 건\n처음 봤어요. 이상했죠."
+            });
+        }
+
+        return lines;
     }
 
     // ──────────────────────────────────────
@@ -182,6 +267,11 @@ public class WitnessGame : MonoBehaviour
     // ──────────────────────────────────────
     void OnClosePopup()
     {
+        // 완료 안 된 버튼만 다시 표시
+        if (!witnessCleared[0]) witnessBtn1.gameObject.SetActive(true);
+        if (!witnessCleared[1]) witnessBtn2.gameObject.SetActive(true);
+        if (!witnessCleared[2]) witnessBtn3.gameObject.SetActive(true);
+
         statementPopup.SetActive(false);
         currentWitness = -1;
     }
@@ -243,7 +333,9 @@ public class WitnessGame : MonoBehaviour
             case 1: witnessBtn2.gameObject.SetActive(false); break;
             case 2: witnessBtn3.gameObject.SetActive(false); break;
         }
-
+        if (!witnessCleared[0]) witnessBtn1.gameObject.SetActive(true);
+        if (!witnessCleared[1]) witnessBtn2.gameObject.SetActive(true);
+        if (!witnessCleared[2]) witnessBtn3.gameObject.SetActive(true);
         statementPopup.SetActive(false);
         currentWitness = -1;
 
